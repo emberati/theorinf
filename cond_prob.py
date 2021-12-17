@@ -1,9 +1,13 @@
 from decimal import Decimal
 
 
-def cond_prob(chs, seq):
-    probabilities = probs(chs, seq)
-    conditional_probabilities = calc_cond_prob(seq.keys(), seq)
+def do(ensemble, seq):
+    partial_probabilities = {ch: find_partial_probabilities(ch, seq) for ch in ensemble}
+    full_probabilities = {ch: sum(partial_probabilities.get(ch)) for ch in ensemble}
+    conditional_probabilities = find_condition_probabilities(seq)
+    print(f'{partial_probabilities=}')
+    print(f'{full_probabilities=}')
+    print(f'{conditional_probabilities=}')
 
 
 def dec(var):
@@ -32,7 +36,7 @@ def find_partial_probabilities(ch: str, seq):
     return probs
 
 
-def full_probability_from_seq(ch: str, seq):
+def find_full_probability(ch: str, seq):
     """
     Находит сумму частичных вероятностей (полную вероятность для символа `ch`)
     для последовательности `seq`
@@ -43,25 +47,14 @@ def full_probability_from_seq(ch: str, seq):
     return sum(find_partial_probabilities(ch, seq))
 
 
-def full_probability_from_partial(ch: str, partial):
-    """
-        Находит сумму частичных вероятностей (полную вероятность для символа `ch`)
-        из частичных вероятностей `partial`
-        :param ch: символ, для которого необходимо найти вероятность;
-        :param partial: список частичных вероятностей для символа `ch`;
-        :return: полную вероятность для символа `ch`.
-    """
-    return sum(partial)
-
-
-def calc_condition_probability(comb, seq, prob):
+def find_condition_probabilities(seq):
     """
     Находит условную вероятность для сочетания `comb`
     :param comb: сочетание, для которого нужно найти условную вероятность;
     :return: условную вероятность для сочетания `comb`.
     """
 
-    return {comb: dec(seq.get(comb)) / full_probability_from_seq(comb[1], seq) for comb in seq}
+    return {comb: dec(seq.get(comb)) / find_full_probability(comb[1], seq) for comb in seq}
 
 
 def ensemble_entropy(p):
@@ -76,6 +69,6 @@ def conditional_entropy(p):
 
 
 def probs(chs, seq):
-    return {ch: full_probability_from_seq(ch, seq) for ch in chs}
+    return {ch: find_full_probability(ch, seq) for ch in chs}
 
 # seq = {('x1', 'y1'): 0.21, ('x1', 'y2'): 0.42, ('x1', 'y3'): 0.07, ('x2', 'y1'): 0.09, ('x2', 'y2'): 0.18, ('x2', 'y3'): 0.03}
