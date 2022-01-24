@@ -12,17 +12,8 @@ def do(seq):
     conditional_probabilities1 = find_condition_probabilities(seq, rev=True)
     define_ensemble = find_define_ensemble(full_probabilities, seq)
 
-    x_probabilities = []
-    y_probabilities = []
-    for ch in ensemble:
-        x_probabilities.append(full_probabilities.get(ch))
-        y_probabilities.append(full_probabilities.get(ch))
-
-    # print(f'{partial_probabilities=}')
-    # print(f'{full_probabilities=}')
-    # print(f'{conditional_probabilities0=}')
-    # print(f'{conditional_probabilities1=}')
-    # print()
+    x_probabilities = find_values_for_letter('x', full_probabilities).values()
+    y_probabilities = find_values_for_letter('y', full_probabilities).values()
 
     print('Полные вероятности:')
     print_full_probabilities(partial_probabilities, full_probabilities)
@@ -41,13 +32,8 @@ def do(seq):
     print()
     print('Энтроприя:')
     print('H(x) = sum{pi·log2(pi)}')
-    print('H(x)', end=' = ')
-    print_entropy(x_probabilities, entropy(x_probabilities))
-    print('H(y)', end=' = ')
-    print_entropy(y_probabilities, entropy(y_probabilities))
-
-    print('x_probabilities:', x_probabilities, sep='\n')
-    print('y_probabilities:', y_probabilities, sep='\n')
+    print_entropy('x', x_probabilities, entropy(x_probabilities))
+    print_entropy('y', y_probabilities, entropy(y_probabilities))
 
 
 def print_full_probabilities(partial_probabilities, full_probabilities):
@@ -63,8 +49,12 @@ def print_conditional_probabilities(conditional_probabilities):
         print(conditional_probabilities.get(comb))
 
 
-def print_entropy(partial_probabilities, result):
-    print(*partial_probabilities, sep=' + ', end=' = ')
+def print_entropy(letter, px, result):
+    parts = []
+    for probability in px:
+        parts.append(f'{probability}·log2({probability})')
+    print(f'H({letter})', end=' = -(')
+    print(*parts, sep=' + ', end=') = ')
     print(result)
 
 
@@ -102,6 +92,19 @@ def dec(var):
     :return: десятичное (Decimal) число.
     """
     return Decimal(str(var))
+
+
+def find_values_for_letter(letter: str, seq):
+    """
+    Находит значения, ключ для которых содержит указанный символ
+    :param letter: символ, для которого необходимо найти значения
+    :param seq: словарь ключей и значений, в котором необходимо найти значения
+    :return: словарь значений, ключ для которых содержит указанный символ
+    """
+    letter_values = {}
+    for val in seq:
+        if letter in val: letter_values[val] = seq.get(val)
+    return letter_values
 
 
 def find_partial_probabilities(ch: str, seq):
@@ -152,7 +155,7 @@ def entropy(px):
     sum_ = 0
     for p in px:
         sum_ += dec(p) * dec(log2(p))
-    return round(sum_, 3)
+    return -round(sum_, 3)
 
 
 def conditional_entropy(p):
