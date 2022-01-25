@@ -8,12 +8,12 @@ def do(seq):
     ensemble = find_ensemble(seq)
     partial_probabilities = {ch: find_partial_probabilities(ch, seq) for ch in ensemble}
     full_probabilities = {ch: sum(partial_probabilities.get(ch)) for ch in ensemble}
-    conditional_probabilities0 = find_condition_probabilities(seq)
-    conditional_probabilities1 = find_condition_probabilities(seq, rev=True)
-    define_ensemble = find_define_ensemble(full_probabilities, seq)
+    conditional_probabilities_x = condition_probabilities(seq)
+    conditional_probabilities_y = condition_probabilities(seq, rev=True)
+    full_probabilities_mult = full_probabilities_multiplication(full_probabilities, seq)
 
-    x_probabilities = find_values_for_letter('x', full_probabilities).values()
-    y_probabilities = find_values_for_letter('y', full_probabilities).values()
+    x_probabilities = find_entry('x', full_probabilities).values()
+    y_probabilities = find_entry('y', full_probabilities).values()
 
     print('Полные вероятности:')
     print_full_probabilities(partial_probabilities, full_probabilities)
@@ -21,19 +21,18 @@ def do(seq):
     print()
     print('Произведение полных вероятностей')
     #print('Определение зависимости ансамблей:')
-    for define in define_ensemble:
-        print(f'p({define[0]})·p({define[1]}) =', define_ensemble.get(define))
+    for define in full_probabilities_mult:
+        print(f'p({define[0]})·p({define[1]}) =', full_probabilities_mult.get(define))
 
     print()
     print('Условные вероятности:')
-    print_conditional_probabilities(conditional_probabilities0)
-    print_conditional_probabilities(conditional_probabilities1)
+    print_conditional_probabilities(conditional_probabilities_x)
+    print_conditional_probabilities(conditional_probabilities_y)
 
     print()
     print('Энтроприя:')
-    print('H(x) = sum{pi·log2(pi)}')
-    print_entropy('x', x_probabilities, entropy(x_probabilities))
-    print_entropy('y', y_probabilities, entropy(y_probabilities))
+    print_entropy('x', x_probabilities, ensemble_entropy(x_probabilities))
+    print_entropy('y', y_probabilities, ensemble_entropy(y_probabilities))
 
 
 def print_full_probabilities(partial_probabilities, full_probabilities):
@@ -41,6 +40,10 @@ def print_full_probabilities(partial_probabilities, full_probabilities):
         print(f'p({ch})', '=', end=' ')
         print(*partial_probabilities.get(ch), sep=' + ', end=' = ')
         print(full_probabilities.get(ch))
+
+
+def print_multiplication_of_full_probabilities():
+    pass
 
 
 def print_conditional_probabilities(conditional_probabilities):
@@ -94,7 +97,7 @@ def dec(var):
     return Decimal(str(var))
 
 
-def find_values_for_letter(letter: str, seq):
+def find_entry(letter: str, seq):
     """
     Находит значения, ключ для которых содержит указанный символ
     :param letter: символ, для которого необходимо найти значения
@@ -106,7 +109,7 @@ def find_values_for_letter(letter: str, seq):
         if letter in val: letter_values[val] = seq.get(val)
     return letter_values
 
-
+# Deprecated
 def find_partial_probabilities(ch: str, seq):
     """
     Находит все частичные вероятности для символа из последовательности сочетаний,
@@ -124,7 +127,7 @@ def find_partial_probabilities(ch: str, seq):
     return probs
 
 
-def find_full_probability(ch: str, seq):
+def full_probability(ch: str, seq):
     """
     Находит сумму частичных вероятностей (полную вероятность для символа `ch`)
     для последовательности `seq`
@@ -135,26 +138,24 @@ def find_full_probability(ch: str, seq):
     return sum(find_partial_probabilities(ch, seq))
 
 
-def find_condition_probabilities(seq, rev=False):
+def condition_probabilities(seq, rev=False):
     """
     Находит условную вероятность для сочетания `comb`
     :param comb: сочетание, для которого нужно найти условную вероятность;
     :return: условную вероятность для сочетания `comb`.
     """
-    if rev: return {comb[::-1]: round(dec(seq.get(comb)) / dec(find_full_probability(comb[::-1][1], seq)), 3) for comb in seq}
-    else: return {comb: round(dec(seq.get(comb)) / find_full_probability(comb[1], seq), 3) for comb in seq}
+    if rev: return {comb[::-1]: round(dec(seq.get(comb)) / dec(full_probability(comb[::-1][1], seq)), 3) for comb in seq}
+    else: return {comb: round(dec(seq.get(comb)) / full_probability(comb[1], seq), 3) for comb in seq}
 
 
-def find_define_ensemble(full_probabilities, seq):
+def full_probabilities_multiplication(full_probabilities, seq):
     prob = full_probabilities
-    print(prob)
     return {comb: round(dec(prob.get(comb[0])) * dec(prob.get(comb[1])), 3) for comb in seq}
 
 
-def entropy(px):
+def ensemble_entropy(px):
     sum_ = 0
-    for p in px:
-        sum_ += dec(p) * dec(log2(p))
+    for p in px: sum_ += dec(p) * dec(log2(p))
     return -round(sum_, 3)
 
 
@@ -163,6 +164,6 @@ def conditional_entropy(p):
 
 
 def probs(chs, seq):
-    return {ch: find_full_probability(ch, seq) for ch in chs}
+    return {ch: full_probability(ch, seq) for ch in chs}
 
 # seq = {('x1', 'y1'): 0.21, ('x1', 'y2'): 0.42, ('x1', 'y3'): 0.07, ('x2', 'y1'): 0.09, ('x2', 'y2'): 0.18, ('x2', 'y3'): 0.03}
