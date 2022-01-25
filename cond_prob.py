@@ -17,30 +17,37 @@ seq = {('x1', 'y1'): 0.041, ('x1', 'y2'): 0.046, ('x1', 'y3'): 0.058, ('x1', 'y4
 '''
 
 
-def do(seq):
-    ensemble                    = find_ensemble(seq)
-    partial_probabilities       = partial_probability(seq, ensemble=ensemble)
-    full_probabilities          = full_probability(partial_probabilities)
-    conditional_probabilities_x = condition_probabilities(seq, full_probabilities)
-    conditional_probabilities_y = condition_probabilities(seq, full_probabilities, rev=True)
-    full_probabilities_mult     = full_probabilities_multiplication(full_probabilities, seq)
+ens = None
+part = None
+full = None
+cond = None
+full_m = None
 
-    x_probabilities = find_entry('x', full_probabilities)
-    y_probabilities = find_entry('y', full_probabilities)
+
+def do(seq):
+    global ens, part, full, cond, full_m
+    ens     = find_ensemble(seq)
+    part    = partial_probability(seq, ensemble=ens)
+    full    = full_probability(part)
+    cond    = conditional_probabilities(seq, full)
+    full_m  = full_probabilities_multiplication(full, seq)
+
+    x_probabilities = find_entry('x', full)
+    y_probabilities = find_entry('y', full)
 
     print('Полные вероятности:')
-    print_full_probabilities(partial_probabilities, full_probabilities)
+    print_full_probabilities(part, full)
 
     print()
     print('Произведение полных вероятностей:')
     #print('Определение зависимости ансамблей:')
-    for define in full_probabilities_mult:
-        print(f'p({define[0]})·p({define[1]}) =', full_probabilities_mult.get(define))
+    for define in full_m:
+        print(f'p({define[0]})·p({define[1]}) =', full_m.get(define))
 
     print()
     print('Условные вероятности:')
-    print_conditional_probabilities(conditional_probabilities_x)
-    print_conditional_probabilities(conditional_probabilities_y)
+    print_conditional_probabilities(cond)
+
 
     print()
     print('Энтроприя:')
@@ -132,23 +139,22 @@ def full_probability(partial_probabilities):
     return result
 
 
-def condition_probabilities(seq, full_probabilities, rev=False):
+def conditional_probabilities(seq, full_probabilities):
     """
     Находит условные вероятноси для X или Y из словаря совместных вероятностей двух ансамблей.
     :param seq: исходная последовательность (совместная вероятность двух ансамблей);
     :param full_probabilities: словарь полных вероятности для каждого символа;
-    :param rev: флаг, показывающий, менять ли местами сочетания символов при нахождении условной вероятности.
-    Обычно это может использоваться для нахождения условных вероятностей для Y;
-    :return: условную вероятность для сочетания `comb`.
+    :return: словарь условных вероятностей для сочетаний.
     """
-    if rev: return {
+    cond_y = {
         key: value for (key, value) in sorted({
             comb[::-1]: round(
                 dec(seq.get(comb)) / dec(full_probabilities.get(comb[::-1][1])), 3
             ) for comb in seq
         }.items())
     }
-    else: return {comb: round(dec(seq.get(comb)) / dec(full_probabilities.get(comb[1])), 3) for comb in seq}
+    cond_x = {comb: round(dec(seq.get(comb)) / dec(full_probabilities.get(comb[1])), 3) for comb in seq}
+    return {**cond_x, **cond_y}
 
 
 def full_probabilities_multiplication(full_probabilities, seq):
