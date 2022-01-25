@@ -1,6 +1,6 @@
 from dataclasses import field
 from decimal import Decimal
-from math import log, log2
+from math import log2
 from typing import List, Dict
 
 
@@ -22,6 +22,7 @@ part = None
 full = None
 cond = None
 full_m = None
+ens_entr = None
 seq = {
     ('x1', 'y1'): 0.019, ('x1', 'y2'): 0.039,
     ('x1', 'y3'): 0.034, ('x1', 'y4'): 0.056,
@@ -40,9 +41,6 @@ def do(seq):
     cond    = conditional_probabilities(seq, full)
     full_m  = full_probabilities_multiplication(full, seq)
 
-    x_probabilities = find_entry('x', full)
-    y_probabilities = find_entry('y', full)
-
     print('Полные вероятности:')
     print_full_probabilities(part, full)
 
@@ -56,11 +54,9 @@ def do(seq):
     print('Условные вероятности:')
     print_conditional_probabilities(cond)
 
-
     print()
     print('Энтроприя:')
-    print_entropy('x', x_probabilities, ensemble_entropy(x_probabilities))
-    print_entropy('y', y_probabilities, ensemble_entropy(y_probabilities))
+    print_entropy('x', full, ensemble_entropy(full))
 
 
 def print_full_probabilities(partial_probabilities, full_probabilities):
@@ -170,10 +166,21 @@ def full_probabilities_multiplication(full_probabilities, seq):
     return {comb: round(dec(prob.get(comb[0])) * dec(prob.get(comb[1])), 3) for comb in seq}
 
 
-def ensemble_entropy(px):
-    sum_ = 0
-    for p in px: sum_ += dec(p) * dec(log2(p))
-    return -round(sum_, 3)
+def ensemble_entropy(full_probabilities):
+    import re
+    # sum_ = 0
+    # for p in full_probabilities: sum_ += dec(p) * dec(log2(p))
+    # # ''.join(re.findall("[a-zA-Z]+", 'sdfgsd213123')
+
+    result = {}
+    for key, val in full_probabilities.items():
+        letter = ''.join(re.findall("[a-zA-Z]+", key))
+        if letter not in result: result[letter] = 0
+        else: result[letter] += dec(val) * dec(log2(val))
+
+    for key, val in result.items():
+        result[key] = -round(val, 3)
+    return result
 
 
 def conditional_entropy(p):
