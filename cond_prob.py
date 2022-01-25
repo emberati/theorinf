@@ -22,6 +22,14 @@ part = None
 full = None
 cond = None
 full_m = None
+seq = {
+    ('x1', 'y1'): 0.019, ('x1', 'y2'): 0.039,
+    ('x1', 'y3'): 0.034, ('x1', 'y4'): 0.056,
+    ('x2', 'y1'): 0.022, ('x2', 'y2'): 0.092,
+    ('x2', 'y3'): 0.038, ('x2', 'y4'): 0.034,
+    ('x3', 'y1'): 0.06,  ('x3', 'y2'): 0.055,
+    ('x3', 'y3'): 0.037, ('x3', 'y4'): 0.514
+}
 
 
 def do(seq):
@@ -170,3 +178,7 @@ def ensemble_entropy(px):
 
 def conditional_entropy(p):
     pass
+
+
+if __name__ == '__main__':
+    do(seq)
