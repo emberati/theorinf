@@ -4,22 +4,35 @@ from math import log, log2
 from typing import List, Dict
 
 
-def do(seq):
-    ensemble = find_ensemble(seq)
-    partial_probabilities = {ch: find_partial_probabilities(ch, seq) for ch in ensemble}
-    full_probabilities = {ch: sum(partial_probabilities.get(ch)) for ch in ensemble}
-    conditional_probabilities_x = condition_probabilities(seq)
-    conditional_probabilities_y = condition_probabilities(seq, rev=True)
-    full_probabilities_mult = full_probabilities_multiplication(full_probabilities, seq)
+'''
+seq = {('x1', 'y1'): 0.019, ('x1', 'y2'): 0.039, ('x1', 'y3'): 0.034, ('x1', 'y4'): 0.056, ('x2', 'y1'): 0.022, ('x2', 'y2'): 0.092, ('x2', 'y3'): 0.038, ('x2', 'y4'): 0.034, ('x3', 'y1'): 0.06, ('x3', 'y2'): 0.055, ('x3', 'y3'): 0.037, ('x3', 'y4'): 0.514}
+ens = ['x1', 'x2', 'x3', 'y1', 'y2', 'y3', 'y4']
 
-    x_probabilities = find_entry('x', full_probabilities).values()
-    y_probabilities = find_entry('y', full_probabilities).values()
+# Казах
+seq = {('x1', 'y1'): 0.011, ('x1', 'y2'): 0.041, ('x1', 'y3'): 0.037, ('x1', 'y4'): 0.074, ('x2', 'y1'): 0.057, ('x2', 'y2'): 0.06, ('x2', 'y3'): 0.192, ('x2', 'y4'): 0.09, ('x3', 'y1'): 0.068, ('x3', 'y2'): 0.06, ('x3', 'y3'): 0.2, ('x3', 'y4'): 0.11}
+# Димас
+seq = {('x1', 'y1'): 0.031, ('x1', 'y2'): 0.038, ('x1', 'y3'): 0.046, ('x1', 'y4'): 0.069, ('x2', 'y1'): 0.06, ('x2', 'y2'): 0.061, ('x2', 'y3'): 0.163, ('x2', 'y4'): 0.103, ('x3', 'y1'): 0.051, ('x3', 'y2'): 0.042, ('x3', 'y3'): 0.044, ('x3', 'y4'): 0.292}
+# Лёха
+seq = {('x1', 'y1'): 0.041, ('x1', 'y2'): 0.046, ('x1', 'y3'): 0.058, ('x1', 'y4'): 0.048, ('x2', 'y1'): 0.041, ('x2', 'y2'): 0.086, ('x2', 'y3'): 0.146, ('x2', 'y4'): 0.045, ('x3', 'y1'): 0.052, ('x3', 'y2'): 0.053, ('x3', 'y3'): 0.27, ('x3', 'y4'): 0.114}
+'''
+
+
+def do(seq):
+    ensemble                    = find_ensemble(seq)
+    partial_probabilities       = partial_probability(seq, ensemble=ensemble)
+    full_probabilities          = full_probability(partial_probabilities)
+    conditional_probabilities_x = condition_probabilities(seq, full_probabilities)
+    conditional_probabilities_y = condition_probabilities(seq, full_probabilities, rev=True)
+    full_probabilities_mult     = full_probabilities_multiplication(full_probabilities, seq)
+
+    x_probabilities = find_entry('x', full_probabilities)
+    y_probabilities = find_entry('y', full_probabilities)
 
     print('Полные вероятности:')
     print_full_probabilities(partial_probabilities, full_probabilities)
 
     print()
-    print('Произведение полных вероятностей')
+    print('Произведение полных вероятностей:')
     #print('Определение зависимости ансамблей:')
     for define in full_probabilities_mult:
         print(f'p({define[0]})·p({define[1]}) =', full_probabilities_mult.get(define))
@@ -74,29 +87,6 @@ def find_ensemble(seq: Dict[tuple, float] = field(default_factory=dict)):
     return sorted(ens)
 
 
-'''
-seq = {('x1', 'y1'): 0.019, ('x1', 'y2'): 0.039, ('x1', 'y3'): 0.034, ('x1', 'y4'): 0.056, ('x2', 'y1'): 0.022, ('x2', 'y2'): 0.092, ('x2', 'y3'): 0.038, ('x2', 'y4'): 0.034, ('x3', 'y1'): 0.06, ('x3', 'y2'): 0.055, ('x3', 'y3'): 0.037, ('x3', 'y4'): 0.514}
-ens = ['x1', 'x2', 'x3', 'y1', 'y2', 'y3', 'y4']
-
-# Казах
-seq = {('x1', 'y1'): 0.011, ('x1', 'y2'): 0.041, ('x1', 'y3'): 0.037, ('x1', 'y4'): 0.074, ('x2', 'y1'): 0.057, ('x2', 'y2'): 0.06, ('x2', 'y3'): 0.192, ('x2', 'y4'): 0.09, ('x3', 'y1'): 0.068, ('x3', 'y2'): 0.06, ('x3', 'y3'): 0.2, ('x3', 'y4'): 0.11}
-# Димас
-seq = {('x1', 'y1'): 0.031, ('x1', 'y2'): 0.038, ('x1', 'y3'): 0.046, ('x1', 'y4'): 0.069, ('x2', 'y1'): 0.06, ('x2', 'y2'): 0.061, ('x2', 'y3'): 0.163, ('x2', 'y4'): 0.103, ('x3', 'y1'): 0.051, ('x3', 'y2'): 0.042, ('x3', 'y3'): 0.044, ('x3', 'y4'): 0.292}
-# Лёха
-seq = {('x1', 'y1'): 0.041, ('x1', 'y2'): 0.046, ('x1', 'y3'): 0.058, ('x1', 'y4'): 0.048, ('x2', 'y1'): 0.041, ('x2', 'y2'): 0.086, ('x2', 'y3'): 0.146, ('x2', 'y4'): 0.045, ('x3', 'y1'): 0.052, ('x3', 'y2'): 0.053, ('x3', 'y3'): 0.27, ('x3', 'y4'): 0.114}
-
-'''
-
-
-def dec(var):
-    """
-    Преобразует float `var` в десятичное (Decimal) число
-    :param var: число с плавающей точкой;
-    :return: десятичное (Decimal) число.
-    """
-    return Decimal(str(var))
-
-
 def find_entry(letter: str, seq):
     """
     Находит значения, ключ для которых содержит указанный символ
@@ -104,48 +94,61 @@ def find_entry(letter: str, seq):
     :param seq: словарь ключей и значений, в котором необходимо найти значения
     :return: словарь значений, ключ для которых содержит указанный символ
     """
-    letter_values = {}
+    values = []
     for val in seq:
-        if letter in val: letter_values[val] = seq.get(val)
-    return letter_values
-
-# Deprecated
-def find_partial_probabilities(ch: str, seq):
-    """
-    Находит все частичные вероятности для символа из последовательности сочетаний,
-    например, для символа `x1` в последовательности:
-    {('x1', 'y1'): 0.21, ('x1', 'y2'): 0.42, ('x1', 'y3'): 0.07,
-    ('x2', 'y1'): 0.09, ('x2', 'y2'): 0.18, ('x2', 'y3'): 0.03}
-    -   [0.21, 0.42, 0.07]
-    :param ch: символ для которого необходимо найти все вероятности;
-    :param seq: последовательность сочетаний;
-    :return: список найденых частичных вероятностей.
-    """
-    probs = []
-    for pair in seq:
-        if ch in pair: probs.append(dec(seq.get(pair)))
-    return probs
+        if letter in val: values.append(seq.get(val))
+    return values
 
 
-def full_probability(ch: str, seq):
+def dec(var):
     """
-    Находит сумму частичных вероятностей (полную вероятность для символа `ch`)
-    для последовательности `seq`
-    :param ch: символ, для которого необходимо найти вероятность;
-    :param seq: последовательность сочетаний;
-    :return: полную вероятность для символа `ch`.
+    Преобразует float `var` в десятичное (Decimal) число.
+    :param var: число с плавающей точкой;
+    :return: десятичное (Decimal) число.
     """
-    return sum(find_partial_probabilities(ch, seq))
+    return Decimal(str(var))
 
 
-def condition_probabilities(seq, rev=False):
+def partial_probability(seq, ensemble: List[int] = None):
+    if not ensemble: ensemble = find_ensemble(seq)
+    return {ch: find_entry(ch, seq) for ch in ensemble}
+
+
+def full_probability(partial_probabilities):
     """
-    Находит условную вероятность для сочетания `comb`
-    :param comb: сочетание, для которого нужно найти условную вероятность;
+    Находит сумму частичных вероятностей (полную вероятность для каждого символа)
+    в виде словаря.
+    :param partial_probabilities: словарь, ключами для которых являются символы,
+    для которых значениями являются массивы частычных вероятностей;
+    :return: словарь, ключами для которых являются символы,
+    а значениями - суммы данных частичных вероятностей для каждого символа.
+    """
+    result = {}
+    for letter in partial_probabilities:
+        full = 0
+        for value in partial_probabilities.get(letter):
+            full += dec(value)
+        result[letter] = round(full, 3)
+    return result
+
+
+def condition_probabilities(seq, full_probabilities, rev=False):
+    """
+    Находит условные вероятноси для X или Y из словаря совместных вероятностей двух ансамблей.
+    :param seq: исходная последовательность (совместная вероятность двух ансамблей);
+    :param full_probabilities: словарь полных вероятности для каждого символа;
+    :param rev: флаг, показывающий, менять ли местами сочетания символов при нахождении условной вероятности.
+    Обычно это может использоваться для нахождения условных вероятностей для Y;
     :return: условную вероятность для сочетания `comb`.
     """
-    if rev: return {comb[::-1]: round(dec(seq.get(comb)) / dec(full_probability(comb[::-1][1], seq)), 3) for comb in seq}
-    else: return {comb: round(dec(seq.get(comb)) / full_probability(comb[1], seq), 3) for comb in seq}
+    if rev: return {
+        key: value for (key, value) in sorted({
+            comb[::-1]: round(
+                dec(seq.get(comb)) / dec(full_probabilities.get(comb[::-1][1])), 3
+            ) for comb in seq
+        }.items())
+    }
+    else: return {comb: round(dec(seq.get(comb)) / dec(full_probabilities.get(comb[1])), 3) for comb in seq}
 
 
 def full_probabilities_multiplication(full_probabilities, seq):
@@ -161,9 +164,3 @@ def ensemble_entropy(px):
 
 def conditional_entropy(p):
     pass
-
-
-def probs(chs, seq):
-    return {ch: full_probability(ch, seq) for ch in chs}
-
-# seq = {('x1', 'y1'): 0.21, ('x1', 'y2'): 0.42, ('x1', 'y3'): 0.07, ('x2', 'y1'): 0.09, ('x2', 'y2'): 0.18, ('x2', 'y3'): 0.03}
