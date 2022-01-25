@@ -24,6 +24,7 @@ cond = None
 full_m = None
 ens_ent = None
 cond_ent = None
+full_cond_ent = None
 seq = {
     ('x1', 'y1'): 0.019, ('x1', 'y2'): 0.039,
     ('x1', 'y3'): 0.034, ('x1', 'y4'): 0.056,
@@ -69,6 +70,20 @@ def do(seq):
     print()
     print('Полная условная энтропия:')
     print_conditional_entropy(full_cond_ent)
+
+
+def print_all():
+    print(
+        f'{ens=}',
+        f'{part=}',
+        f'{full=}',
+        f'{cond=}',
+        f'{full_m=}',
+        f'{ens_ent=}',
+        f'{cond_ent=}',
+        f'{full_cond_ent=}',
+        sep='\n'
+    )
 
 
 def print_full_probabilities(partial_probabilities, full_probabilities):
@@ -216,7 +231,6 @@ def ensemble_entropy(probabilities):
 def full_conditional_entropy(conditional_entropy, full):
     result = {}
     for key, val in conditional_entropy.items():
-        print(key)
         letter = (key[0], split_letter(key[1]).upper())
         if letter not in result: result[letter] = 0
         result[letter] += dec(val) * dec(full[key[1]])
