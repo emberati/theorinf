@@ -23,6 +23,7 @@ full = None
 cond = None
 full_m = None
 ens_entr = None
+cond_entr = None
 seq = {
     ('x1', 'y1'): 0.019, ('x1', 'y2'): 0.039,
     ('x1', 'y3'): 0.034, ('x1', 'y4'): 0.056,
@@ -34,13 +35,14 @@ seq = {
 
 
 def do(seq):
-    global ens, part, full, cond, full_m, ens_entr
+    global ens, part, full, cond, full_m, ens_ent, cond_ent
     ens     = find_ensemble(seq)
     part    = partial_probability(seq, ensemble=ens)
     full    = full_probability(part)
     cond    = conditional_probabilities(seq, full)
     full_m  = full_probabilities_multiplication(full, seq)
-    ens_entr= ensemble_entropy(full)
+    ens_ent= ensemble_entropy(full)
+    cond_ent= ensemble_entropy(cond)
 
     print('Полные вероятности:')
     print_full_probabilities(part, full)
@@ -73,7 +75,6 @@ def print_full_probabilities(partial_probabilities, full_probabilities):
 
 def print_multiplication_of_full_probabilities():
     pass
-
 
 
 def print_conditional_probabilities(conditional_probabilities):
@@ -191,24 +192,12 @@ def ensemble_entropy(full_probabilities):
         elif isinstance(key, tuple): letter = (''.join(re.findall("[a-zA-Z]+", key[0])).upper(), key[1])
         else: return 'Переданы неправильные данные!'
         if letter not in result: result[letter] = 0
-        else: result[letter] += dec(val) * dec(log2(val))
+        result[letter] += dec(val) * dec(log2(val))
 
     for key, val in result.items():
         result[key] = -round(val, 3)
     return result
 
 
-def conditional_entropy(conditional_probabilities):
-    import re
-    result = {}
-    for key, val in conditional_probabilities.items():
-        pair = (''.join(re.findall("[a-zA-Z]+", key[0])).upper(), key[1])
-        if pair not in result: result[pair] = 0
-        else: result[pair] += dec(val) * dec(log2(val))
-
-    for key, val in result.items():
-        result[key] = -round(val, 3)
-    return result
-
-if __name__ == '__main__':
-    do(seq)
+# if __name__ == '__main__':
+#     do(seq)
