@@ -41,8 +41,9 @@ def do(seq):
     full    = full_probability(part)
     cond    = conditional_probabilities(seq, full)
     full_m  = full_probabilities_multiplication(full, seq)
-    ens_ent= ensemble_entropy(full)
-    cond_ent= ensemble_entropy(cond)
+    ens_ent = ensemble_entropy(full)
+    cond_ent = ensemble_entropy(cond)
+    full_cond_ent = full_conditional_entropy(cond_ent, full)
 
     print('Полные вероятности:')
     print_full_probabilities(part, full)
@@ -64,6 +65,10 @@ def do(seq):
     print()
     print('Условная энтропия:')
     print_conditional_entropy(cond_ent)
+
+    print()
+    print('Полная условная энтропия:')
+    print_conditional_entropy(full_cond_ent)
 
 
 def print_full_probabilities(partial_probabilities, full_probabilities):
@@ -134,6 +139,11 @@ def find_entry(letter: str, seq):
     return values
 
 
+def split_letter(stroke: str):
+    import re
+    return ''.join(re.findall("[a-zA-Z]+", stroke))
+
+
 def dec(var):
     """
     Преобразует float `var` в десятичное (Decimal) число.
@@ -190,17 +200,29 @@ def full_probabilities_multiplication(full_probabilities, seq):
 
 
 def ensemble_entropy(probabilities):
-    import re
     result = {}
     for key, val in probabilities.items():
-        if isinstance(key, str): letter = ''.join(re.findall("[a-zA-Z]+", key))
-        elif isinstance(key, tuple): letter = (''.join(re.findall("[a-zA-Z]+", key[0])).upper(), key[1])
+        if isinstance(key, str): letter = split_letter(key)
+        elif isinstance(key, tuple): letter = (split_letter(key[0]).upper(), key[1])
         else: return 'Переданы неправильные данные!'
         if letter not in result: result[letter] = 0
         result[letter] += dec(val) * dec(log2(val))
 
     for key, val in result.items():
         result[key] = -round(val, 3)
+    return result
+
+
+def full_conditional_entropy(conditional_entropy, full):
+    result = {}
+    for key, val in conditional_entropy.items():
+        print(key)
+        letter = (key[0], split_letter(key[1]).upper())
+        if letter not in result: result[letter] = 0
+        result[letter] += dec(val) * dec(full[key[1]])
+
+    for key, val in result.items():
+        result[key] = round(val, 3)
     return result
 
 
