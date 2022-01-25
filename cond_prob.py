@@ -34,12 +34,13 @@ seq = {
 
 
 def do(seq):
-    global ens, part, full, cond, full_m
+    global ens, part, full, cond, full_m, ens_entr
     ens     = find_ensemble(seq)
     part    = partial_probability(seq, ensemble=ens)
     full    = full_probability(part)
     cond    = conditional_probabilities(seq, full)
     full_m  = full_probabilities_multiplication(full, seq)
+    ens_entr= ensemble_entropy(full)
 
     print('Полные вероятности:')
     print_full_probabilities(part, full)
@@ -56,7 +57,10 @@ def do(seq):
 
     print()
     print('Энтроприя:')
-    print_entropy('x', full, ensemble_entropy(full))
+    print_entropy(full, ens_entr)
+
+    print()
+    print('Условная энтропия:')
 
 
 def print_full_probabilities(partial_probabilities, full_probabilities):
@@ -76,13 +80,24 @@ def print_conditional_probabilities(conditional_probabilities):
         print(conditional_probabilities.get(comb))
 
 
-def print_entropy(letter, px, result):
-    parts = []
-    for probability in px:
-        parts.append(f'{probability}·log2({probability})')
-    print(f'H({letter})', end=' = -(')
-    print(*parts, sep=' + ', end=') = ')
-    print(result)
+def print_entropy(full, result):
+    dict_solution = {}
+    for key, prob in full.items():
+        for letter, entropy in result.items():
+            if letter in key:
+                if letter not in dict_solution:
+                    dict_solution[letter] = ([], entropy)
+                dict_solution[letter][0].append((key, prob))
+                break
+            continue
+    # Casting to string
+    text_solution = ''
+    for key, val in dict_solution.items():
+        text_solution += f'H({key}) = -('
+        text_solution += ' + '.join([f'p({pi[0]})·log2(p({pi[0]}))' for pi in val[0]]) + ') = -('
+        text_solution += ' + '.join([f'p({pi[1]})·log2(p({pi[1]}))' for pi in val[0]]) + ') = '
+        text_solution += str(val[1]) + '\n'
+    print(text_solution)
 
 
 def find_ensemble(seq: Dict[tuple, float] = field(default_factory=dict)):
