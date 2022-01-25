@@ -22,8 +22,8 @@ part = None
 full = None
 cond = None
 full_m = None
-ens_entr = None
-cond_entr = None
+ens_ent = None
+cond_ent = None
 seq = {
     ('x1', 'y1'): 0.019, ('x1', 'y2'): 0.039,
     ('x1', 'y3'): 0.034, ('x1', 'y4'): 0.056,
@@ -59,11 +59,11 @@ def do(seq):
 
     print()
     print('Энтроприя:')
-    print_entropy(full, ens_entr)
+    print_ensemble_entropy(full, ens_ent)
 
     print()
     print('Условная энтропия:')
-    print(ensemble_entropy(cond))
+    print_conditional_entropy(cond_ent)
 
 
 def print_full_probabilities(partial_probabilities, full_probabilities):
@@ -83,10 +83,10 @@ def print_conditional_probabilities(conditional_probabilities):
         print(conditional_probabilities.get(comb))
 
 
-def print_entropy(full, result):
+def print_ensemble_entropy(full, entropies):
     dict_solution = {}
     for key, prob in full.items():
-        for letter, entropy in result.items():
+        for letter, entropy in entropies.items():
             if letter in key:
                 if letter not in dict_solution:
                     dict_solution[letter] = ([], entropy)
@@ -101,6 +101,11 @@ def print_entropy(full, result):
         text_solution += ' + '.join([f'p({pi[1]})·log2(p({pi[1]}))' for pi in val[0]]) + ') = '
         text_solution += str(val[1]) + '\n'
     print(text_solution)
+
+
+def print_conditional_entropy(entropies):
+    for key, val in entropies.items():
+        print(f'H({key[0]}|{key[1]}) =', val)
 
 
 def find_ensemble(seq: Dict[tuple, float] = field(default_factory=dict)):
@@ -184,10 +189,10 @@ def full_probabilities_multiplication(full_probabilities, seq):
     return {comb: round(dec(prob.get(comb[0])) * dec(prob.get(comb[1])), 3) for comb in seq}
 
 
-def ensemble_entropy(full_probabilities):
+def ensemble_entropy(probabilities):
     import re
     result = {}
-    for key, val in full_probabilities.items():
+    for key, val in probabilities.items():
         if isinstance(key, str): letter = ''.join(re.findall("[a-zA-Z]+", key))
         elif isinstance(key, tuple): letter = (''.join(re.findall("[a-zA-Z]+", key[0])).upper(), key[1])
         else: return 'Переданы неправильные данные!'
