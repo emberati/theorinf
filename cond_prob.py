@@ -61,6 +61,7 @@ def do(seq):
 
     print()
     print('Условная энтропия:')
+    print(ensemble_entropy(cond))
 
 
 def print_full_probabilities(partial_probabilities, full_probabilities):
@@ -72,6 +73,7 @@ def print_full_probabilities(partial_probabilities, full_probabilities):
 
 def print_multiplication_of_full_probabilities():
     pass
+
 
 
 def print_conditional_probabilities(conditional_probabilities):
@@ -183,13 +185,11 @@ def full_probabilities_multiplication(full_probabilities, seq):
 
 def ensemble_entropy(full_probabilities):
     import re
-    # sum_ = 0
-    # for p in full_probabilities: sum_ += dec(p) * dec(log2(p))
-    # # ''.join(re.findall("[a-zA-Z]+", 'sdfgsd213123')
-
     result = {}
     for key, val in full_probabilities.items():
-        letter = ''.join(re.findall("[a-zA-Z]+", key))
+        if isinstance(key, str): letter = ''.join(re.findall("[a-zA-Z]+", key))
+        elif isinstance(key, tuple): letter = (''.join(re.findall("[a-zA-Z]+", key[0])).upper(), key[1])
+        else: return 'Переданы неправильные данные!'
         if letter not in result: result[letter] = 0
         else: result[letter] += dec(val) * dec(log2(val))
 
@@ -198,9 +198,17 @@ def ensemble_entropy(full_probabilities):
     return result
 
 
-def conditional_entropy(p):
-    pass
+def conditional_entropy(conditional_probabilities):
+    import re
+    result = {}
+    for key, val in conditional_probabilities.items():
+        pair = (''.join(re.findall("[a-zA-Z]+", key[0])).upper(), key[1])
+        if pair not in result: result[pair] = 0
+        else: result[pair] += dec(val) * dec(log2(val))
 
+    for key, val in result.items():
+        result[key] = -round(val, 3)
+    return result
 
 if __name__ == '__main__':
     do(seq)
