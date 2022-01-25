@@ -36,7 +36,7 @@ seq = {
 
 
 def do(seq):
-    global ens, part, full, cond, full_m, ens_ent, cond_ent
+    global ens, part, full, cond, full_m, ens_ent, cond_ent, full_cond_ent
     ens     = find_ensemble(seq)
     part    = partial_probability(seq, ensemble=ens)
     full    = full_probability(part)
@@ -159,15 +159,6 @@ def split_letter(stroke: str):
     return ''.join(re.findall("[a-zA-Z]+", stroke))
 
 
-def dec(var):
-    """
-    Преобразует float `var` в десятичное (Decimal) число.
-    :param var: число с плавающей точкой;
-    :return: десятичное (Decimal) число.
-    """
-    return Decimal(str(var))
-
-
 def partial_probability(seq, ensemble: List[int] = None):
     if not ensemble: ensemble = find_ensemble(seq)
     return {ch: find_entry(ch, seq) for ch in ensemble}
@@ -186,7 +177,7 @@ def full_probability(partial_probabilities):
     for letter in partial_probabilities:
         full = 0
         for value in partial_probabilities.get(letter):
-            full += dec(value)
+            full += value
         result[letter] = round(full, 3)
     return result
 
@@ -201,17 +192,17 @@ def conditional_probabilities(seq, full_probabilities):
     cond_y = {
         key: value for (key, value) in sorted({
             comb[::-1]: round(
-                dec(seq.get(comb)) / dec(full_probabilities.get(comb[::-1][1])), 3
+                seq.get(comb) / full_probabilities.get(comb[::-1][1]), 3
             ) for comb in seq
         }.items())
     }
-    cond_x = {comb: round(dec(seq.get(comb)) / dec(full_probabilities.get(comb[1])), 3) for comb in seq}
+    cond_x = {comb: round(seq.get(comb) / full_probabilities.get(comb[1]), 3) for comb in seq}
     return {**cond_x, **cond_y}
 
 
 def full_probabilities_multiplication(full_probabilities, seq):
     prob = full_probabilities
-    return {comb: round(dec(prob.get(comb[0])) * dec(prob.get(comb[1])), 3) for comb in seq}
+    return {comb: round(prob.get(comb[0]) * prob.get(comb[1]), 3) for comb in seq}
 
 
 def ensemble_entropy(probabilities):
@@ -221,7 +212,7 @@ def ensemble_entropy(probabilities):
         elif isinstance(key, tuple): letter = (split_letter(key[0]).upper(), key[1])
         else: return 'Переданы неправильные данные!'
         if letter not in result: result[letter] = 0
-        result[letter] += dec(val) * dec(log2(val))
+        result[letter] += val * log2(val)
 
     for key, val in result.items():
         result[key] = -round(val, 3)
@@ -233,7 +224,7 @@ def full_conditional_entropy(conditional_entropy, full):
     for key, val in conditional_entropy.items():
         letter = (key[0], split_letter(key[1]).upper())
         if letter not in result: result[letter] = 0
-        result[letter] += dec(val) * dec(full[key[1]])
+        result[letter] += val * full[key[1]]
 
     for key, val in result.items():
         result[key] = round(val, 3)
