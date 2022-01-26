@@ -82,7 +82,7 @@ def print_all():
         f'{ens_ent=}',
         f'{cond_ent=}',
         f'{full_cond_ent=}',
-        sep='\n'
+        sep='\n\n'
     )
 
 
